@@ -182,13 +182,9 @@ def ucsMain(problem, start):
     movements = [] # construct movements
     path = states[goal][0]
     for i in range(len(path) - 1):
-        prev = path[i]
+        cur = path[i]
         next = path[i+1]
-        succesors = problem.getSuccessors(prev)
-        for succesor in succesors:
-            if succesor[0] == next:
-                movements.append(succesor[1])
-                break
+        movements.append(getDirection(cur, next))
     return movements
 
 def find_smallest_cost_node(nodes):
@@ -207,10 +203,61 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
+def manhattanHeuristic(state, problem=None):
+    goal = problem.goal
+    return abs(goal[0] - state[0]) + abs(goal[1] - state[1])
+
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    movements = aStarMain(problem, heuristic)
+    return movements
+
+def aStarMain(problem, heuristic):
+    start = problem.getStartState()
+    opened = [] # format [(state, heur_cost),...]
+    closed = [] # format [state,...]
+    states = {} # states {state: ([path, cost]),...}
+    goal = None # goal state
+    opened.append((start, heuristic(start, problem)))
+    states[start] = ([start], 0) # start to start
+    while len(opened) > 0:
+        current = find_smallest_cost_node(opened)
+        opened.remove(current)
+        if problem.isGoalState(current[0]):
+            goal = current[0]
+            # break
+        closed.append(current[0])
+        succesors = problem.getSuccessors(current[0])
+        for succesor in succesors:
+            if succesor[0] not in closed:# or succesor[0] not in opened:
+                path_cost = states[current[0]][1] + succesor[2]
+                heur_dist = heuristic(current[0], problem) # 启发式距离
+                opened.append((succesor[0], path_cost + heur_dist))
+                path = states[current[0]][0][:] # copy list
+                path.append(succesor[0])
+                if not states.has_key(succesor[0]) or path_cost < states[succesor[0]][1]:
+                    states[succesor[0]] = (path, path_cost)
+    movements = [] # construct movements
+    path = states[goal][0]
+    for i in range(len(path) - 1):
+        cur = path[i]
+        next = path[i+1]
+        movements.append(getDirection(cur, next))
+    return movements
+
+def getDirection(cur, next):
+     from game import Directions
+     if cur[0] == next[0]:
+         if cur[1] < next[1]:
+             return Directions.NORTH
+         else:
+             return Directions.SOUTH
+     else:
+         if cur[0] < next[0]:
+             return Directions.EAST
+         else:
+             return Directions.WEST
 
 
 # Abbreviations
