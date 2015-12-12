@@ -87,12 +87,78 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    movements = [] # directions to move
+    closed = []
+    start = problem.getStartState()
+    closed.append(start)
+    dfsMain(problem, start, closed, movements)
+    return movements
+
+def dfsMain(problem, current, closed, movements):
+    if problem.isGoalState(current):
+        return True
+    else:
+        succesors = problem.getSuccessors(current)
+        for succesor in succesors:
+            if succesor[0] not in closed:
+                closed.append(succesor[0])
+                movements.append(succesor[1])
+                finished = dfsMain(problem, succesor[0], closed, movements)
+                if finished: return True
+                closed.pop()
+                movements.pop()
+        return False
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    start = problem.getStartState()
+    movements = bfsMain(problem, start)
+    return movements
+
+def bfsMain(problem, start):
+    opened = []
+    closed = []
+    states = {} # state dict
+    goal = None # goal state
+    opened.append(start)
+    while len(opened) > 0:
+        current = opened.pop(0)
+        closed.append(current)
+        if problem.isGoalState(current):
+            goal = current
+            break
+        else:
+            succesors = problem.getSuccessors(current)
+            for succesor in succesors:
+                if succesor[0] not in closed:
+                    opened.append(succesor[0])
+                    states[succesor[0]] = current # record state
+    movements = [] # construct reversed movements
+    current = goal
+    while True:
+        parent = states[current]
+        succesors = problem.getSuccessors(parent)
+        for succesor in succesors:
+            if succesor[0] == current:
+                movements.append(succesor[1])
+                break
+        current = parent
+        if current == start: break
+    return list(reversed(movements))
+
+# def getDirection(cur, next):
+#     from game import Directions
+#     if cur[0] == next[0]:
+#         if cur[1] < next[1]:
+#             return Directions.EAST
+#         else:
+#             return Directions.WEST
+#     else:
+#         if cur[0] < next[0]:
+#             return Directions.NORTH
+#         else:
+#             return Directions.SOUTH
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
