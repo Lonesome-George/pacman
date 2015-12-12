@@ -1,3 +1,5 @@
+#coding=utf-8
+
 # search.py
 # ---------
 # Licensing Information:  You are free to use or extend these projects for
@@ -131,7 +133,7 @@ def bfsMain(problem, start):
         else:
             succesors = problem.getSuccessors(current)
             for succesor in succesors:
-                if succesor[0] not in closed:
+                if succesor[0] not in closed:# or succesor[0] not in opened:
                     opened.append(succesor[0])
                     states[succesor[0]] = current # record state
     movements = [] # construct reversed movements
@@ -147,23 +149,56 @@ def bfsMain(problem, start):
         if current == start: break
     return list(reversed(movements))
 
-# def getDirection(cur, next):
-#     from game import Directions
-#     if cur[0] == next[0]:
-#         if cur[1] < next[1]:
-#             return Directions.EAST
-#         else:
-#             return Directions.WEST
-#     else:
-#         if cur[0] < next[0]:
-#             return Directions.NORTH
-#         else:
-#             return Directions.SOUTH
-
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    start = problem.getStartState()
+    movements = ucsMain(problem, start)
+    return movements
+
+def ucsMain(problem, start):
+    opened = [] # format [(state, cost),...]
+    closed = [] # format [state,...]
+    states = {} # states {state: ([path, cost]),...}
+    goal = None # goal state
+    opened.append((start, 0))
+    states[start] = ([start], 0) # start to start
+    while len(opened) > 0:
+        current = find_smallest_cost_node(opened)
+        opened.remove(current)
+        if problem.isGoalState(current[0]):
+            goal = current[0]
+        closed.append(current[0])
+        succesors = problem.getSuccessors(current[0])
+        for succesor in succesors:
+            if succesor[0] not in closed:# or succesor[0] not in opened:
+                step_cost = succesor[2]
+                path_cost = states[current[0]][1] + step_cost
+                opened.append((succesor[0], path_cost))
+                path = states[current[0]][0][:] # copy list
+                path.append(succesor[0])
+                if not states.has_key(succesor[0]) or path_cost < states[succesor[0]][1]:
+                    states[succesor[0]] = (path, path_cost)
+    movements = [] # construct movements
+    path = states[goal][0]
+    for i in range(len(path) - 1):
+        prev = path[i]
+        next = path[i+1]
+        succesors = problem.getSuccessors(prev)
+        for succesor in succesors:
+            if succesor[0] == next:
+                movements.append(succesor[1])
+                break
+    return movements
+
+def find_smallest_cost_node(nodes):
+    idx = 0
+    min_cost = nodes[0][1]
+    for i in range(0, len(nodes)):
+        if nodes[i][1] < min_cost:
+            idx = i
+            min_cost = nodes[i][1]
+    return nodes[idx]
 
 def nullHeuristic(state, problem=None):
     """
