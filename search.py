@@ -89,27 +89,36 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    movements = [] # directions to move
-    closed = []
     start = problem.getStartState()
-    closed.append(start)
-    dfsMain(problem, start, closed, movements)
+    movements = dfsMain(problem, start)
     return movements
 
-def dfsMain(problem, current, closed, movements):
-    if problem.isGoalState(current):
-        return True
-    else:
-        succesors = problem.getSuccessors(current)
-        for succesor in succesors:
-            if succesor[0] not in closed:
-                closed.append(succesor[0])
-                movements.append(succesor[1])
-                finished = dfsMain(problem, succesor[0], closed, movements)
-                if finished: return True
-                closed.pop()
-                movements.pop()
-        return False
+def dfsMain(problem, start):
+    opened = []
+    closed = []
+    states = {} # state dict
+    goal = None # goal state
+    opened.append(start)
+    while True:
+        current = opened.pop()
+        closed.append(current)
+        if problem.isGoalState(current):
+            goal = current
+            break
+        else:
+            succesors = problem.getSuccessors(current)
+            for succesor in succesors:
+                if succesor[0] not in closed:
+                    opened.append(succesor[0])
+                    states[succesor[0]] = current # record state
+    movements = [] # construct reversed movements
+    current = goal
+    while True:
+        parent = states[current]
+        movements.append(getDirection(parent, current))
+        current = parent
+        if current == start: break
+    return list(reversed(movements))
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
@@ -140,11 +149,7 @@ def bfsMain(problem, start):
     current = goal
     while True:
         parent = states[current]
-        succesors = problem.getSuccessors(parent)
-        for succesor in succesors:
-            if succesor[0] == current:
-                movements.append(succesor[1])
-                break
+        movements.append(getDirection(parent, current))
         current = parent
         if current == start: break
     return list(reversed(movements))
@@ -202,10 +207,6 @@ def nullHeuristic(state, problem=None):
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
     return 0
-
-def manhattanHeuristic(state, problem=None):
-    goal = problem.goal
-    return abs(goal[0] - state[0]) + abs(goal[1] - state[1])
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
