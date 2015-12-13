@@ -157,40 +157,24 @@ def bfsMain(problem, start):
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    start = problem.getStartState()
-    movements = ucsMain(problem, start)
-    return movements
+    fringe = util.PriorityQueue()
+    fringe.push( (problem.getStartState(), []), 0)
+    explored = []
 
-def ucsMain(problem, start):
-    opened = [] # format [(state, cost),...]
-    closed = [] # format [state,...]
-    states = {} # states {state: ([path, cost]),...}
-    goal = None # goal state
-    opened.append((start, 0))
-    states[start] = ([start], 0) # start to start
-    while len(opened) > 0:
-        current = find_smallest_cost_node(opened)
-        opened.remove(current)
-        if problem.isGoalState(current[0]):
-            goal = current[0]
-        closed.append(current[0])
-        succesors = problem.getSuccessors(current[0])
-        for succesor in succesors:
-            if succesor[0] not in closed:# or succesor[0] not in opened:
-                step_cost = succesor[2]
-                path_cost = states[current[0]][1] + step_cost
-                opened.append((succesor[0], path_cost))
-                path = states[current[0]][0][:] # copy list
-                path.append(succesor[0])
-                if not states.has_key(succesor[0]) or path_cost < states[succesor[0]][1]:
-                    states[succesor[0]] = (path, path_cost)
-    movements = [] # construct movements
-    path = states[goal][0]
-    for i in range(len(path) - 1):
-        cur = path[i]
-        next = path[i+1]
-        movements.append(getDirection(cur, next))
-    return movements
+    while not fringe.isEmpty():
+        node, actions = fringe.pop()
+
+        if problem.isGoalState(node):
+            return actions
+
+        explored.append(node)
+
+        for coord, direction, steps in problem.getSuccessors(node):
+            if not coord in explored:
+                new_actions = actions + [direction]
+                fringe.push((coord, new_actions), problem.getCostOfActions(new_actions))
+
+    return []
 
 def find_smallest_cost_node(nodes):
     idx = 0
@@ -211,41 +195,26 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    movements = aStarMain(problem, heuristic)
-    return movements
-
-def aStarMain(problem, heuristic):
+    closedset = []
+    fringe = util.PriorityQueue()
     start = problem.getStartState()
-    opened = [] # format [(state, heur_cost),...]
-    closed = [] # format [state,...]
-    states = {} # states {state: ([path, cost]),...}
-    goal = None # goal state
-    opened.append((start, heuristic(start, problem)))
-    states[start] = ([start], 0) # start to start
-    while len(opened) > 0:
-        current = find_smallest_cost_node(opened)
-        opened.remove(current)
-        if problem.isGoalState(current[0]):
-            goal = current[0]
-            # break
-        closed.append(current[0])
-        succesors = problem.getSuccessors(current[0])
-        for succesor in succesors:
-            if succesor[0] not in closed:# or succesor[0] not in opened:
-                path_cost = states[current[0]][1] + succesor[2]
-                heur_dist = heuristic(current[0], problem) # 启发式距离
-                opened.append((succesor[0], path_cost + heur_dist))
-                path = states[current[0]][0][:] # copy list
-                path.append(succesor[0])
-                if not states.has_key(succesor[0]) or path_cost < states[succesor[0]][1]:
-                    states[succesor[0]] = (path, path_cost)
-    movements = [] # construct movements
-    path = states[goal][0]
-    for i in range(len(path) - 1):
-        cur = path[i]
-        next = path[i+1]
-        movements.append(getDirection(cur, next))
-    return movements
+    fringe.push((start, []), heuristic(start, problem))
+
+    while not fringe.isEmpty():
+        node, actions = fringe.pop()
+
+        if problem.isGoalState(node):
+            return actions
+
+        closedset.append(node)
+
+        for coord, direction, cost in problem.getSuccessors(node):
+            if not coord in closedset:
+                new_actions = actions + [direction]
+                score = problem.getCostOfActions(new_actions) + heuristic(coord, problem)
+                fringe.push((coord, new_actions), score)
+
+    return []
 
 def getDirection(cur, next):
      from game import Directions

@@ -1,3 +1,5 @@
+#coding=utf-8
+
 # searchAgents.py
 # ---------------
 # Licensing Information:  You are free to use or extend these projects for
@@ -454,7 +456,41 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    foodList = list(foodGrid.asList())
+    cost = 0
+    foodAte = []
+    xy1 = position
+    for xy2 in foodList:
+        cost += find_min_dist(xy1, foodList, foodAte)
+    return cost
+
+    # foodList = list(foodGrid.asList())
+    # gs = problem.startingGameState
+    #
+    # if not problem.heuristicInfo.get('foodDistanceGrid', False):
+    #     problem.heuristicInfo['foodDistanceGrid'] = {}
+    #
+    # foodDistanceGrid = problem.heuristicInfo['foodDistanceGrid']
+    #
+    # totalDistance = 0
+    #
+    # if len(foodList) > 0:
+    #
+    #     return totalDistance
+
+def find_min_dist(pos, foodList, foodAte):
+    from util import manhattanDistance
+    min_dist = None
+    foodEat = None
+    for food in foodList:
+        if food in foodAte: continue
+        dist = manhattanDistance(pos, food)
+        if min_dist is None or dist < min_dist:
+            min_dist = dist
+            foodEat = food
+    foodAte.append(foodEat)
+    if min_dist is None: return 0
+    return min_dist
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -540,3 +576,27 @@ def mazeDistance(point1, point2, gameState):
     assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
     return len(search.bfs(prob))
+
+"""
+Jeff
+"""
+
+class DepthFirstSearchAgent(SearchAgent):
+    def __init__(self):
+        SearchAgent.__init__(self, fn="dfs")
+
+class BreadthFirstSearchAgent(SearchAgent):
+    def __init__(self):
+        SearchAgent.__init__(self, fn="bfs")
+
+class UniformCostSearchAgent(SearchAgent):
+    def __init__(self):
+        SearchAgent.__init__(self, fn="ucs")
+
+class ManhattanAStarSearchAgent(SearchAgent):
+    def __init__(self):
+        SearchAgent.__init__(self, fn="astar", heuristic="manhattanHeuristic")
+
+class TrivialAStarFoodSearchAgent(SearchAgent):
+    def __init__(self):
+        pass
