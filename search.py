@@ -122,6 +122,35 @@ def breadthFirstSearch(problem):
                 visited.append(coord)
 
     return []
+
+def getShortestDist(start, target, walls):
+    "Find shortest distances to other dots"
+    fringe = util.Queue()
+    fringe.push( (start, []) )
+
+    visited = []
+    while not fringe.isEmpty():
+        node, actions = fringe.pop()
+
+        for coord, direction, steps in getSuccessors(node, walls):
+            if not coord in visited:
+                if coord[0] == target[0] and coord[1] == target[1]:
+                    return actions + [direction]
+                fringe.push((coord, actions + [direction]))
+                visited.append(coord)
+
+    return []
+
+def getSuccessors(state, walls):
+    from game import Directions, Actions
+    successors = []
+    for direction in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+      x,y = state
+      dx, dy = Actions.directionToVector(direction)
+      nextx, nexty = int(x + dx), int(y + dy)
+      if not walls[nextx][nexty]:
+        successors.append( ( (nextx, nexty), direction, 1) )
+    return successors
       
 def uniformCostSearch(problem):
     "Search the node of least total cost first. "
@@ -144,6 +173,39 @@ def uniformCostSearch(problem):
                 fringe.push((coord, new_actions), problem.getCostOfActions(new_actions))
 
     return []
+
+    # pQueue = util.PriorityQueue()
+    #
+    # item = (problem.getStartState(), problem.getStartState(), 0, None)
+    # priority = 0
+    # pQueue.push( item, priority )
+    #
+    # visited = set()
+    # parentTable = []
+    # path = []
+    #
+    # while (not pQueue.isEmpty()):
+    #     state = pQueue.pop()
+    #     parentTable.append([state[0], state[1], state[3]])
+    #     if (problem.isGoalState(state[1])):
+    #         break
+    #     currentPoint = state[1]
+    #     if (currentPoint not in visited):
+    #         visited.add(currentPoint)
+    #         for successor in problem.getSuccessors(currentPoint):
+    #             cost = state[2] + successor[2]
+    #         action = successor[1]
+    #         nextPoint = successor[0]
+    #         pQueue.push((currentPoint, nextPoint, cost, action), cost)
+    #
+    # currentState = state[1]
+    # while (currentState != problem.getStartState()):
+    #     for parent in parentTable:
+    #         if (parent[1] == currentState):
+    #             currentState = parent[0]
+    #             path.insert(0, parent[2])
+    #             break
+    # return path
 
   
 def nullHeuristic(state):
@@ -179,9 +241,28 @@ def aStarSearch(problem, heuristic=nullHeuristic):
   
 
 def greedySearch(problem, heuristic=nullHeuristic):
-  "Search the node that has the lowest heuristic first."
-  "*** YOUR CODE HERE ***"
-  
+    "Search the node that has the lowest heuristic first."
+    "*** YOUR CODE HERE ***"
+    closedset = []
+    fringe = util.PriorityQueue()
+    start = problem.getStartState()
+    fringe.push((start, ()), heuristic(start))
+
+    while not fringe.isEmpty():
+        node, actions = fringe.pop()
+
+        if problem.isGoalState(node):
+            return actions
+
+        closedset.append(node)
+
+        for coord, direction, cost in problem.getSuccessors(node):
+            if not coord in closedset:
+                new_actions = actions + (direction, )
+                score = problem.getCostOfActions(new_actions) + heuristic(coord)
+                fringe.push((coord, new_actions), score)
+
+    return []
 
 # Abbreviations
 bfs = breadthFirstSearch
