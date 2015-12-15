@@ -103,6 +103,87 @@ def depthFirstSearch(problem):
                 fringe.push((coord, actions + [direction], visited + [node] ))
 
     return []
+    closed = set()
+    fringe = util.Stack()
+    fringe.push(makeNode(problem.getStartState()))
+
+    while True:
+        if fringe.isEmpty():
+            return []
+
+        node = fringe.pop()
+
+        if problem.isGoalState(node.getState()):
+            return node.getActions()
+        if node.getState() not in closed:
+            closed.add(node.getState())
+            insertAll(fringe, expand(node, problem))
+def makeNode(state):
+    return Node(state)
+
+def expand(node, problem):
+    parentNode = node
+    childList = []
+    #print node.getActions()
+    successors = problem.getSuccessors(node.getState())
+    #print successors
+    for i in range(len(successors)):
+        successor = successors[i]
+        child = makeNode(successor[0])
+        child.setActionList(parentNode.getActions())
+        child.addAction(successor[1])
+        child.setCumulativeCost(parentNode.getCumulativeCost() + successor[2])
+        childList.append(child)
+    return childList
+
+
+"""def insertAll(stack, nodeList):
+    for node in nodeList:
+        stack.push(node)
+
+def insertAllInPriorityQueue(queue, nodeList):
+    for node in nodeList:
+        queue.push(node, node.getDepth())
+
+def insertAllWithCost(queue, nodeList):
+    for node in nodeList:
+        queue.push(node, node.getCumulativeCost())"""
+
+def insertAllWithCost(queue, nodeList):
+    for node in nodeList:
+        queue.push(node, node.getCumulativeCost())
+
+def insertAllWithCostAndHeuristic(queue, nodeList, heuristic, problem):
+    for node in nodeList:
+        queue.push(node, node.getCumulativeCost() + heuristic(node.getState(), problem))
+
+class Node:
+
+    def __init__(self, state):
+        self.actionList = []
+        self.state = state
+        self.cumulativeCost = 0
+
+    def getState(self):
+        return self.state
+
+    def getActions(self):
+        return self.actionList
+
+    def setActionList(self, actions):
+        self.actionList = actions[:]
+
+    def addAction(self, action):
+        self.actionList.append(action)
+
+    def getDepth(self):
+        return len(self.actionList)
+
+    def getCumulativeCost(self):
+        return self.cumulativeCost
+
+    def setCumulativeCost(self, cost):
+        self.cumulativeCost = cost
 
 def breadthFirstSearch(problem):
     "Search the shallowest nodes in the search tree first. [p 74]"
@@ -156,57 +237,42 @@ def getSuccessors(state, walls):
 def uniformCostSearch(problem):
     "Search the node of least total cost first. "
     "*** YOUR CODE HERE ***"
+    # fringe = util.PriorityQueue()
+    # fringe.push((problem.getStartState(), ()), 0)
+    # explored = []
+    #
+    # while not fringe.isEmpty():
+    #     node, actions = fringe.pop()
+    #
+    #     if problem.isGoalState(node):
+    #         return actions
+    #
+    #     explored.append(node)
+    #
+    #     for coord, direction, steps in problem.getSuccessors(node):
+    #         if not coord in explored:
+    #             new_actions = actions + (direction, )
+    #             fringe.push((coord, new_actions), problem.getCostOfActions(new_actions))
+    #
+    # return []
+
+    closed = set()
     fringe = util.PriorityQueue()
-    fringe.push((problem.getStartState(), ()), 0)
-    explored = []
+    node = makeNode(problem.getStartState())
+    node.setCumulativeCost(0)
+    fringe.push(node, node.getCumulativeCost())
 
-    while not fringe.isEmpty():
-        node, actions = fringe.pop()
+    while True:
+        if fringe.isEmpty():
+            return []
 
-        if problem.isGoalState(node):
-            return actions
+        node = fringe.pop()
 
-        explored.append(node)
-
-        for coord, direction, steps in problem.getSuccessors(node):
-            if not coord in explored:
-                new_actions = actions + (direction, )
-                fringe.push((coord, new_actions), problem.getCostOfActions(new_actions))
-
-    return []
-
-    # pQueue = util.PriorityQueue()
-    #
-    # item = (problem.getStartState(), problem.getStartState(), 0, None)
-    # priority = 0
-    # pQueue.push( item, priority )
-    #
-    # visited = set()
-    # parentTable = []
-    # path = []
-    #
-    # while (not pQueue.isEmpty()):
-    #     state = pQueue.pop()
-    #     parentTable.append([state[0], state[1], state[3]])
-    #     if (problem.isGoalState(state[1])):
-    #         break
-    #     currentPoint = state[1]
-    #     if (currentPoint not in visited):
-    #         visited.add(currentPoint)
-    #         for successor in problem.getSuccessors(currentPoint):
-    #             cost = state[2] + successor[2]
-    #         action = successor[1]
-    #         nextPoint = successor[0]
-    #         pQueue.push((currentPoint, nextPoint, cost, action), cost)
-    #
-    # currentState = state[1]
-    # while (currentState != problem.getStartState()):
-    #     for parent in parentTable:
-    #         if (parent[1] == currentState):
-    #             currentState = parent[0]
-    #             path.insert(0, parent[2])
-    #             break
-    # return path
+        if problem.isGoalState(node.getState()):
+            return node.getActions()
+        if node.getState() not in closed:
+            closed.add(node.getState())
+            insertAllWithCost(fringe, expand(node, problem))
 
   
 def nullHeuristic(state):
@@ -219,7 +285,7 @@ def nullHeuristic(state):
 def aStarSearch(problem, heuristic=nullHeuristic):
     "Search the node that has the lowest combined cost and heuristic first."
     "*** YOUR CODE HERE ***"
-    closedset = []
+    """closedset = []
     fringe = util.PriorityQueue()
     start = problem.getStartState()
     fringe.push((start, ()), heuristic(start, problem))
@@ -229,7 +295,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
         if problem.isGoalState(node):
             return actions
-
         closedset.append(node)
 
         for coord, direction, cost in problem.getSuccessors(node):
@@ -238,8 +303,27 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                 score = problem.getCostOfActions(new_actions) + heuristic(coord, problem)
                 fringe.push((coord, new_actions), score)
 
-    return []
-  
+    return []"""
+    closed = set()
+    fringe = util.PriorityQueue()
+    node = makeNode(problem.getStartState())
+    node.setCumulativeCost(0)
+    fringe.push(node, node.getCumulativeCost() + heuristic(node.getState(), problem))
+
+    while True:
+        if fringe.isEmpty():
+            return []
+
+        node = fringe.pop()
+
+        if problem.isGoalState(node.getState()):
+            return node.getActions()
+        if node.getState() not in closed:
+            closed.add(node.getState())
+            insertAllWithCostAndHeuristic(fringe, expand(node, problem), heuristic, problem)
+
+
+
 
 def greedySearch(problem, heuristic=nullHeuristic):
     "Search the node that has the lowest heuristic first."
