@@ -123,6 +123,7 @@ def breadthFirstSearch(problem):
 
     return []
 
+# get shortest distance using bfs
 def getShortestDist(start, target, walls):
     "Find shortest distances to other dots"
     fringe = util.Queue()
@@ -135,11 +136,11 @@ def getShortestDist(start, target, walls):
         for coord, direction, steps in getSuccessors(node, walls):
             if not coord in visited:
                 if coord[0] == target[0] and coord[1] == target[1]:
-                    return actions + [direction]
+                    return len(actions + [direction])
                 fringe.push((coord, actions + [direction]))
                 visited.append(coord)
 
-    return []
+    return None
 
 def getSuccessors(state, walls):
     from game import Directions, Actions

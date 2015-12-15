@@ -391,99 +391,60 @@ def foodHeuristic(state, problem):
   position, foodGrid = state
   foodList = list(foodGrid.asList())
   if len(foodList) == 0: return 0
-  # xy1 = position
 
-  # if len(foodList) > 1:
-  #     return find_max_dist2(foodList)
-  # elif len(foodList) == 1:
-  #     food, dist = find_max_dist(xy1, foodList)
-  #     return dist
-  # else:
-  #     return 0
+  # from search import getShortestDist
+  # objList = foodList[:]
+  # objList.append(position)
+  # mazeDist = {}
+  # for i in range(len(objList)): mazeDist[i] = {}
+  # for i in range(len(objList)):
+  #     obj1 = objList[i]
+  #     for j in range(i+1, len(objList)):
+  #         obj2 = objList[j]
+  #         mazeDist[i][j] = mazeDist[j][i] = getShortestDist(obj1, obj2, problem.walls)
+  # min_s_cost = 0
+  # if len(objList) > 1:
+  #     min_s_cost = min_spanning_cost(len(objList), mazeDist)
+  # return min_s_cost
 
-  # while len(foodList) > 0:
-  #     food, min_cost = find_min_dist(xy1, foodList)
-  #     cost += min_cost
-  #     foodList.remove(food)
-  #     xy1 = food
-  #     # cost += find_min_dist(xy1, foodList)
-  # return cost
-
-  # food, dist = find_min_dist(xy1, foodList)
-  # return dist
-
+  # Optimized
   from search import getShortestDist
   objList = foodList[:]
-  objList.append(position)
   mazeDist = {}
+  for i in range(len(objList)): mazeDist[i] = {}
   for i in range(len(objList)):
       obj1 = objList[i]
       for j in range(i+1, len(objList)):
           obj2 = objList[j]
-          mazeDist[(i,j)] = len(getShortestDist(obj1, obj2, problem.walls))
-          # mazeDist[(i,j)] = manhattanDistance(food1, food2)
+          mazeDist[i][j] = mazeDist[j][i] = getShortestDist(obj1, obj2, problem.walls)
   min_s_cost = 0
   if len(objList) > 1:
       min_s_cost = min_spanning_cost(len(objList), mazeDist)
-  # # dist2spanning_tree = find_min_dist(position, foodList)
-  # dist2spanning_tree = None
-  # for food in foodList:
-  #     dist = len(getShortestDist(position, food, problem.walls))
-  #     if dist2spanning_tree is None or dist < dist2spanning_tree:
-  #         dist2spanning_tree = dist
-  # return min_s_cost + dist2spanning_tree
-  return min_s_cost
+  dist2spanning_tree = None
+  for food in foodList:
+      dist = getShortestDist(position, food, problem.walls)
+      if dist2spanning_tree is None or dist < dist2spanning_tree:
+          dist2spanning_tree = dist
+  return min_s_cost + dist2spanning_tree
 
 def min_spanning_cost(num_vertexes, mazeDist):
     min_cost = 0
     vertexes = set()
+    vertexes.add(0) # add a vertex
     while len(vertexes) < num_vertexes:
-        min_pair = None
-        min_dist = None
-        for pair, dist in mazeDist.iteritems():
-            if min_dist is None or dist < min_dist:
-                min_dist = dist
-                min_pair = pair
-        del mazeDist[min_pair]
-        if (min_pair[0] in vertexes) and (min_pair[1] in vertexes): continue
-        min_cost += min_dist
-        vertexes.add(min_pair[0])
-        vertexes.add(min_pair[1])
+        min_cost += find_min_dist(vertexes, mazeDist)
     return min_cost
 
-def find_min_dist(pos, foodList):
-    from util import manhattanDistance
+def find_min_dist(vertexes, mazeDist):
     min_dist = None
-    # foodEat = None
-    for food in foodList:
-        dist = manhattanDistance(pos, food)
-        if min_dist is None or dist < min_dist:
-            min_dist = dist
-            # foodEat = food
+    vertex = None
+    for v1 in vertexes:
+        for v2, dist in mazeDist[v1].iteritems():
+            if v2 not in vertexes and (min_dist is None or dist < min_dist):
+                min_dist = dist
+                vertex = v2
+    vertexes.add(vertex)
     return min_dist
-
-def find_max_dist(pos, foodList):
-    from util import manhattanDistance
-    max_dist = None
-    # foodEat = None
-    for food in foodList:
-        dist = manhattanDistance(pos, food)
-        if max_dist is None or dist > max_dist:
-            max_dist = dist
-            # foodEat = food
-    return max_dist
-
-# find max distance among all dots
-def find_max_dist2(foodList):
-    from util import manhattanDistance
-    max_dist = None
-    for i in range(len(foodList)):
-        food1 = foodList[i]
-        for j in range(i+1, len(foodList)):
-            food2 = foodList[j]
-            dist = manhattanDistance(food1, food2)
-            if max_dist is None or dist > max_dist: max_dist = dist
-    return max_dist
 
 def trivialSearch(problem):
   return search.aStarSearch(problem, trivialFoodHeuristic)
