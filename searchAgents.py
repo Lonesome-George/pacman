@@ -325,7 +325,7 @@ def manhattanAStar(problem):
   """
   A wrapper for A* that uses the Manhattan distance heuristic.
   """
-  return search.aStarSearch(problem, lambda x: manhattanDistance(x, problem.goal))
+  return search.aStarSearch(problem, lambda x,y: manhattanDistance(x, problem.goal))
 
 class ManhattanAStarSearchAgent(SearchAgent):
   """
@@ -367,10 +367,9 @@ def getFoodHeuristic(gameState):
   # If you don't want to implement this method, you can leave this default implementation
   return foodHeuristic
 
-def greedyHeuristic(state):
+def greedyHeuristic(state, problem):
   return state[1].count()
 
-# def foodHeuristic(state):
 def foodHeuristic(state, problem):
   """
   Here, you can write your food heuristic function instead of using getFoodHeuristic.
@@ -394,42 +393,6 @@ def foodHeuristic(state, problem):
   foodList = list(foodGrid.asList())
   if len(foodList) == 0: return 0
 
-  # from search import getShortestDist
-  # objList = foodList[:]
-  # objList.append(position)
-  # mazeDist = {}
-  # for i in range(len(objList)): mazeDist[i] = {}
-  # for i in range(len(objList)):
-  #     obj1 = objList[i]
-  #     for j in range(i+1, len(objList)):
-  #         obj2 = objList[j]
-  #         mazeDist[i][j] = mazeDist[j][i] = getShortestDist(obj1, obj2, problem.walls)
-  # min_s_cost = 0
-  # if len(objList) > 1:
-  #     min_s_cost = min_spanning_cost(len(objList), mazeDist)
-  # return min_s_cost
-
-  # Optimized
-  # from search import getShortestDist
-  # objList = foodList[:]
-  # mazeDist = {}
-  # for i in range(len(objList)): mazeDist[i] = {}
-  # for i in range(len(objList)):
-  #     obj1 = objList[i]
-  #     for j in range(i+1, len(objList)):
-  #         obj2 = objList[j]
-  #         mazeDist[i][j] = mazeDist[j][i] = getShortestDist(obj1, obj2, problem.walls)
-  # min_s_cost = 0
-  # if len(objList) > 1:
-  #     min_s_cost = min_spanning_cost(len(objList), mazeDist)
-  # dist2spanning_tree = None
-  # for food in foodList:
-  #     dist = getShortestDist(position, food, problem.walls)
-  #     if dist2spanning_tree is None or dist < dist2spanning_tree:
-  #         dist2spanning_tree = dist
-  # return min_s_cost + dist2spanning_tree
-
-  # Optimized again
   from search import getShortestDist
   mazeDist = {}
   for i in range(len(foodList)): mazeDist[i] = {}
@@ -440,48 +403,32 @@ def foodHeuristic(state, problem):
           mazeDist[i][j] = mazeDist[j][i] = getShortestDist(obj1, obj2, problem.walls)
   min_s_cost = 0
   if len(foodList) > 1:
-      min_s_cost, fringe_vertexes = min_spanning_cost(len(foodList), mazeDist)
-  else:
-      fringe_vertexes = [0]
+      min_s_cost = min_spanning_cost(len(foodList), mazeDist)
   dist2spanning_tree = None
-  for vertex in fringe_vertexes:
-      dist = getShortestDist(position, foodList[vertex], problem.walls)
+  for food in foodList:
+      dist = getShortestDist(position, food, problem.walls)
       if dist2spanning_tree is None or dist < dist2spanning_tree:
           dist2spanning_tree = dist
   return min_s_cost + dist2spanning_tree
 
 def min_spanning_cost(num_vertexes, mazeDist):
     min_cost = 0
-    vertexes = set() # 最小生成树中的顶点集
-    links = {}       # 每个顶点的连接度
+    vertexes = set() # vertex set in min spanning tree
     vertexes.add(0) # add the first vertex
-    for i in range(num_vertexes):
-        links[i] = 0
-    links[0] = 1
     while len(vertexes) < num_vertexes:
-        # min_cost += find_min_dist(vertexes, mazeDist)
-        startv, endv, min_dist = find_min_dist(vertexes, mazeDist)
-        links[startv] += 1
-        links[endv] += 1
-        min_cost += min_dist
-    fringe_vertexes = [] # 边缘顶点集(连接度为1)
-    for vertex, count in links.iteritems():
-        if count == 1:
-            fringe_vertexes.append(vertex)
-    return min_cost, fringe_vertexes
+        min_cost += find_min_dist(vertexes, mazeDist)
+    return min_cost
 
 def find_min_dist(vertexes, mazeDist):
     min_dist = None
-    startv = None # 出发顶点
-    endv   = None # 到达顶点
+    vertex = None
     for v1 in vertexes:
-        startv = v1
         for v2, dist in mazeDist[v1].iteritems():
             if v2 not in vertexes and (min_dist is None or dist < min_dist):
                 min_dist = dist
-                endv = v2
-    vertexes.add(endv)
-    return startv, endv, min_dist
+                vertex = v2
+    vertexes.add(vertex)
+    return min_dist
 
 def trivialSearch(problem):
   return search.aStarSearch(problem, trivialFoodHeuristic)
@@ -511,8 +458,8 @@ class GreedyFoodSearchAgent(SearchAgent):
   An agent that computes a path to eat all the dots using greedy search.
   """
   def __init__(self, searchFunction = None, searchType = FoodSearchProblem):
-    __import__(__name__).getFoodHeuristic = lambda gameState: foodHeuristic
-    __import__(__name__).foodHeuristic    = foodHeuristic
+    __import__(__name__).getFoodHeuristic = lambda gameState: greedyHeuristic
+    __import__(__name__).foodHeuristic    = greedyHeuristic
     SearchAgent.__init__(self, greedySearch, searchType)
     
 
